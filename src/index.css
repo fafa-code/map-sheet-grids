@@ -1,13 +1,40 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@import '../node_modules/leaflet/dist/leaflet.css';
+
+.mapContainer {
+    width: 100%;
+    height: 100vh;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
+.my-div-icon {
+    color: red;
+    font-size: 13px;
+}
+
+.my-div-icon-success {
+    color: red;
+    font-size: 13px;
+    line-height: 64px;
+}
+
+.queryDiv {
+    position: absolute;
+    top: 36px;
+    left: 100px;
+    z-index: 999;
+}
+
+.qureyInput {
+    border: 1px solid #ccc;
+    padding: 7px 0px;
+    border-radius: 3px;
+    padding-left: 5px;
+}
+
+.queryBtn {
+    width: 80px;
+    height: 28px;
+    background: #1E9FFF;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
 }
