@@ -2,7 +2,6 @@ import React from 'react';
 import L from 'leaflet';
 import '../index.css';
 import DrawMapGrids from '../map/drawSheetGrids';
-import * as mapSheetTools from '../map/mapSheetTools';
 
 class MapComponent extends React.Component {
     constructor(props) {
@@ -47,8 +46,28 @@ class MapComponent extends React.Component {
      * @param {L.MouseEvent} event 地图点击事件对象
      */
     onMapClick(mapSheetGrids, event) {
-        let mapCode = mapSheetTools.getMapCodeA(event.latlng.lat, event.latlng.lng);
-        console.log(mapSheetGrids[mapCode]);
+        // let mapCode = mapSheetTools.getMapCodeA(event.latlng.lat, event.latlng.lng);
+        // console.log(mapSheetGrids[mapCode]);
+        console.log(event.latlng);
+    }
+
+    getCenter(data) {
+        let row = [];
+        let col = [];
+        for (let i = 0; i < data.length; i++) {
+            row.push(parseInt(data[i].name.substring(0, 1).charCodeAt() - 65));
+            col.push(parseInt(data[i].name.substring(1)));
+        }
+        row.sort((value1, value2) => value1 - value2);
+        col.sort((value1, value2) => value1 - value2);
+        let centerLat = row[0] * 4 + ((row[row.length - 1] + 1) * 4 - row[0] * 4) / 2;
+        let lngMin = col[0] > 31 ? ((col[0] - 31) * 6) : ((col[0] - 32) * 6);
+        let lngMax = col[row.length - 1] > 31 ? ((col[row.length - 1] - 30) * 6) : ((col[row.length - 1] - 31) * 6);
+        let centerLng = lngMin + (lngMax - lngMin) / 2;
+        
+        let center = L.latLng(centerLat, centerLng);
+        console.log(center);
+        return center;
     }
 
     /**
@@ -92,31 +111,49 @@ class MapComponent extends React.Component {
 
         // 将切片添加至地图
         L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
-            minZoom: 4,
+            minZoom: 1,
             maxZoom: 18,
             id: 'mapbox.streets'
         }).addTo(map);
 
         // 设置图幅绘制范围
-        let southWest = L.latLng(-85, -180),
-            northEast = L.latLng(85, 180),
+        let southWest = L.latLng(0, -6),
+            northEast = L.latLng(4, -12),
             drawBounds = L.latLngBounds(southWest, northEast);
 
         // 绘制地图分幅格网
         let drawSheetGrids = new DrawMapGrids(map, drawBounds);
         let mapSheetGrids = drawSheetGrids.drawGrids();
-        let url = "http://10.16.28.19:8080/gx-image-helper-app/landi/rest/tileserver/queryAll";
-        this.promiseRequest(url).then((result) => {
-            for (let i = 0; i < result.length; i++) {
-                if (result[i].status === -1) {
-                    mapSheetGrids[result[i].name].setShapeStyle('red', 0.5);
-                } else if (result[i].status === 0) {
-                    mapSheetGrids[result[i].name].setShapeStyle('#49ef04', 0.5);
-                } else {
-                    mapSheetGrids[result[i].name].setShapeStyle('blue', 0.5);
-                }
-            }
-        });
+        // console.log(mapSheetGrids);
+        // 模拟数据
+        // let data = [
+        //     { name: "H51", status: -1 },
+        //     { name: "I47", status: 0 },
+        //     { name: "J51", status: 1 },
+        // ];
+        // for (let i = 0; i < data.length; i++) {
+        //     if (data[i].status === -1) {
+        //         mapSheetGrids[data[i].name].setShapeStyle('red', 0.5);
+        //     } else if (data[i].status === 0) {
+        //         mapSheetGrids[data[i].name].setShapeStyle('#49ef04', 0.5);
+        //     } else {
+        //         mapSheetGrids[data[i].name].setShapeStyle('blue', 0.5);
+        //     }
+        // }
+        // let center = this.getCenter(data);
+        // map.setView(center, 5);
+        // let url = "http://10.16.28.19:8080/gx-image-helper-app/landi/rest/tileserver/queryAll";
+        // this.promiseRequest(url).then((result) => {
+        //     for (let i = 0; i < result.length; i++) {
+        //         if (result[i].status === -1) {
+        //             mapSheetGrids[result[i].name].setShapeStyle('red', 0.5);
+        //         } else if (result[i].status === 0) {
+        //             mapSheetGrids[result[i].name].setShapeStyle('#49ef04', 0.5);
+        //         } else {
+        //             mapSheetGrids[result[i].name].setShapeStyle('blue', 0.5);
+        //         }
+        //     }
+        // });
 
         // 设置state并给地图添加监听事件
         this.setState({ mapSheetGrids: mapSheetGrids });

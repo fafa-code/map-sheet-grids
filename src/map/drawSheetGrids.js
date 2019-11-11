@@ -1,5 +1,5 @@
 import L from 'leaflet';
-import MapSheetA from './mapSheetA';
+import MapSheet from './mapSheet';
 import MapSheeetGrid from './mapSheetGrid';
 
 /**
@@ -19,7 +19,7 @@ class DrawMapGrids {
      */
     drawGrids() {
         // 获取分幅网格图幅编号数组
-        let mapSheetA = new MapSheetA(this.bounds);
+        let mapSheetA = new MapSheet(this.bounds, 1000000);
         let girdCodeList = mapSheetA.getGirdCodeList();
         // 初始化分幅格网图层组
         let gridLayers = L.layerGroup();
