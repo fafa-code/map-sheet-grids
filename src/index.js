@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import MapComponent from './commponent/MapComponent';
+import App from './commponent/App';
 
-ReactDOM.render(<MapComponent />, document.getElementById('root'));
+ReactDOM.render(<App />, document.getElementById('root'));

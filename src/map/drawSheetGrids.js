@@ -11,6 +11,7 @@ class DrawMapGrids {
     constructor(map, bounds) {
         this.map = map;             // 地图对象
         this.bounds = bounds;       // 地图分幅范围
+        this.mapSheetLayerGroup = null;
     }
 
     /**
@@ -32,9 +33,13 @@ class DrawMapGrids {
             mapSheetGrids[mapSheetGrid.mapCode] = mapSheetGrid;
         }
         // 将分幅格网添加至地图
-        gridLayers.addTo(this.map);
+        this.mapSheetLayerGroup = gridLayers.addTo(this.map);
         // 返回分幅网格对象数组
         return mapSheetGrids;
+    }
+
+    getLayerGroup() {
+        return this.mapSheetLayerGroup;
     }
 }
 
