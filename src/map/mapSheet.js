@@ -33,12 +33,7 @@ class MapSheet {
         // 将图幅编号添加至图幅编号数组
         for (let i = 0; i < rowCount; i++) {
             for (let j = 0; j < colCount; j++) {
-                let latitude = northLatitude;
-                if (latitude > 0) {
-                    latitude = northLatitude - (i * latDiff);
-                } else {
-                    latitude = southLatitude + (i * latDiff);
-                }
+                let latitude = northLatitude - (i * latDiff);
                 let longitude = westLongitude + (j * lngDiff);
                 let mapCode = this.getMapCode(latitude, longitude);
                 girdCodeList.push(mapCode);
@@ -56,7 +51,12 @@ class MapSheet {
     getMapCode(latitude, longitude) {
         // 计算1:100万行号
         let rowIndex = parseInt(Math.ceil(Math.abs(latitude) / 4));
-        let rowIndexChar = (rowIndex !== 0) ? String.fromCharCode(rowIndex - 1 + 65) : "A";
+        let rowIndexChar = "";
+        if (latitude <= 0 && (latitude % 4) === 0) {
+            rowIndexChar = String.fromCharCode(rowIndex + 65);  // 南半球临界值归属为下面的图幅
+        } else {
+            rowIndexChar = String.fromCharCode(rowIndex - 1 + 65);
+        }
         // 计算1:100万列号
         let colIndex = 0;
         if (longitude < 0 && (longitude % 6) === 0) {       // 如果经度小于零且为临界点，则将其归属为右侧的图幅
