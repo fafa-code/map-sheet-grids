@@ -6,8 +6,9 @@ class App extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            map: null,
             mapSheetGrids: [],          // 分幅网格对象数组
-            mapSheetLayerGroup: null,
+            mapSheetLayerGroup: null,   // 分幅格网图层
         }
     }
 
@@ -23,7 +24,7 @@ class App extends React.Component {
         return (
             <div>
                 <MapComponent setData={(data) => this.setData(data)} />
-                <MapQueryComponent map={this.state.map} mapSheetGrids={this.state.mapSheetGrids} />
+                <MapQueryComponent map={this.state.map} mapSheetGrids={this.state.mapSheetGrids} setData={(data) => this.setData(data)} />
             </div>
         )
     }

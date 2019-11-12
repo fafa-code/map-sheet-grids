@@ -47,3 +47,8 @@
     color: #ffffff;
     cursor: pointer;
 }
+
+.tipsInfo {
+    color: rgb(253, 101, 0);
+    font-size: 16px;
+}

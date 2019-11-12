@@ -1,6 +1,7 @@
 import React from 'react';
 import L from 'leaflet';
 import '../index.css';
+import DrawMapGrids from '../map/drawSheetGrids';
 
 class MapQueryComponent extends React.Component {
     constructor(props) {
@@ -26,8 +27,8 @@ class MapQueryComponent extends React.Component {
      */
     onHandleQueryClick() {
         let mapCode = this.state.mapCodeInput;
-        let mapSheetGrids = this.state.mapSheetGrids;
-        let map = this.state.map;
+        let mapSheetGrids = this.props.mapSheetGrids;
+        let map = this.props.map;
         let url = "http://10.16.28.19:8080/gx-image-helper-app/landi/rest/tileserver/query?mapCode=" + mapCode;
         this.promiseRequest(url).then((result) => {
             if (result) {
@@ -40,7 +41,7 @@ class MapQueryComponent extends React.Component {
     /**
      * 查询所有格网状态
      */
-    onHandleQueryAllClick() {
+    onHandleQueryAllClick(map) {
         let data = [
             { name: "H45", status: -1 },
             { name: "I47", status: 0 },
@@ -48,6 +49,7 @@ class MapQueryComponent extends React.Component {
             { name: "J44", status: 1 }
         ];
         let mapSheetGrids = this.props.mapSheetGrids;
+        let mapCodeArray = [];
         for (let i = 0; i < data.length; i++) {
             if (data[i].status === -1) {
                 mapSheetGrids[data[i].name].setShapeStyle('red', 0.5);
@@ -56,9 +58,9 @@ class MapQueryComponent extends React.Component {
             } else {
                 mapSheetGrids[data[i].name].setShapeStyle('blue', 0.5);
             }
+            mapCodeArray.push(data[i].name);
         }
-        let center = this.getCenter(mapSheetGrids, data);
-        let map = this.props.map;
+        let center = this.getBounds(mapSheetGrids, mapCodeArray).getCenter();
         map.setView(center, 5);
         // let url = "http://10.16.28.19:8080/gx-image-helper-app/landi/rest/tileserver/queryAll";
         // this.promiseRequest(url).then((result) => {
@@ -74,31 +76,116 @@ class MapQueryComponent extends React.Component {
         // });
     }
 
+    onSelectBoundsClick() {
+
+        let map = this.props.map;
+        map.dragging.disable();
+
+        // 定义拉框选择相关变量
+        let startLatLng = null;             // 拉框选择起点
+        let rectangle = null;               // 拉框矩形
+        let gridGroupOfSelected = null;     // 选中的格网图层组 
+        let gridOfSelected = [];            // 选中的单个格网对象数组
+        let textMarker = null;              // 提示信息注记
+
+        // 鼠标按下事件
+        const onMouseDown = (event) => {
+            startLatLng = event.latlng;
+            map.on("mousemove", onMouseMove);
+            map.off("mousedown", onMouseDown);
+        }
+
+        // 鼠标移动事件
+        const onMouseMove = (event) => {
+            if (rectangle) {
+                rectangle.remove();
+            }
+            let corner1 = startLatLng,
+                corner2 = event.latlng,
+                bounds = L.latLngBounds(corner1, corner2);
+            rectangle = L.rectangle(bounds, { color: "green", fillColor: 'green', weight: 1 }).addTo(map);
+        }
+
+        // 鼠标松开事件
+        const onMouseUp = () => {
+            map.off("mousemove", onMouseMove);
+            // 根据拉框范围绘制分幅格网
+            let drawSheetGrids = new DrawMapGrids(map, rectangle.getBounds());
+            // 获取选中的单个格网对象数组 
+            gridOfSelected = drawSheetGrids.drawGrids("blue", 0.5);
+            // 获取选中的格网图层组
+            gridGroupOfSelected = drawSheetGrids.getLayerGroup();
+            // 添加提示信息
+            addTextInfo();
+            // 地图拖动可用
+            map.dragging.enable();
+            // 移除绘制的拉框
+            rectangle.remove();
+            map.off("mouseup", onMouseUp);
+        }
+
+        // 鼠标右键事件
+        const onContextMenu = () => {
+            // 移除选中的格网图层组
+            gridGroupOfSelected.removeFrom(map);
+            // 移除提示信息文字注记
+            textMarker.remove();
+            map.off("contextmenu", onContextMenu);
+        }
+
+        // 添加提示信息
+        const addTextInfo = () => {
+            let mapCodeArray = [];
+            // 获取选中的所有格网图幅编码
+            for (let item in gridOfSelected) {
+                mapCodeArray.push(item);
+            }
+            let bounds = this.getBounds(gridOfSelected, mapCodeArray);
+            let textLatLng = L.latLng(bounds.getNorth(), bounds.getWest());
+            let textDiv = L.divIcon({
+                html: "双击下载，右键删除",
+                className: 'tipsInfo',
+                iconSize: [150, 32],
+                iconAnchor: [-6, 26],
+            });
+            textMarker = L.marker(textLatLng, { icon: textDiv });
+            textMarker.addTo(map);
+        }
+
+        // 设置地图事件监听
+        map.on("mousedown", onMouseDown);
+        map.on("mouseup", onMouseUp);
+        map.on("contextmenu", onContextMenu);
+    }
+
     /**
-     * 获取请求后返回的格网的中心点
+     * 根据请求数据获取数据范围
      * @param {Array<MapSheetGrid>} mapSheetGrids 分幅格网
-     * @param {json} data 请求结果数据
+     * @param {Array<string>} 格网编号数组 
+     * @returns {L.LatLngBounds} 数据范围
      */
-    getCenter(mapSheetGrids, data) {
-        let gridCenterLats = [];    // 格网中心纬度数组
-        let gridCenterLngs = [];    // 格网中心经度数组
+    getBounds(mapSheetGrids, data) {
+        let gridLats = [];    // 格网中心纬度数组
+        let gridLngs = [];    // 格网中心经度数组
         for (let i = 0; i < data.length; i++) {
-            let gridCenter = mapSheetGrids[data[i].name].center;
-            gridCenterLats.push(gridCenter.lat);
-            gridCenterLngs.push(gridCenter.lng);
+            let bounds = mapSheetGrids[data[i]].shape.getBounds();
+            gridLats.push(bounds.getNorth());
+            gridLats.push(bounds.getSouth());
+            gridLngs.push(bounds.getWest());
+            gridLngs.push(bounds.getEast());
         }
         // 对纬度数组排序
-        gridCenterLats.sort((lat1, lat2) => {
+        gridLats.sort((lat1, lat2) => {
             return lat1 - lat2;
         });
         // 对经度数组排序
-        gridCenterLngs.sort((lng1, lng2) => {
+        gridLngs.sort((lng1, lng2) => {
             return lng1 - lng2;
         });
-        let lat = (gridCenterLats[0] + gridCenterLats[gridCenterLats.length - 1]) / 2;
-        let lng = (gridCenterLngs[0] + gridCenterLngs[gridCenterLngs.length - 1]) / 2;
-        let center = L.latLng(lat, lng);
-        return center;
+        let southWest = L.latLng(gridLats[0], gridLngs[0]);
+        let northEast = L.latLng(gridLats[gridLats.length - 1], gridLngs[gridLngs.length - 1]);
+        let bounds = L.latLngBounds(southWest, northEast);
+        return bounds;
     }
 
     /**
@@ -128,8 +215,9 @@ class MapQueryComponent extends React.Component {
         return (
             <div className="queryDiv">
                 <input className="qureyInput" type="text" name="mapCode" placeholder="请输入图幅编号" autoComplete="off" onChange={this.handleChange.bind(this)} />
-                <button className="queryBtn" onClick={this.onHandleQueryClick.bind(this, this.state.map)}>查询</button>
-                <button className="queryStatusBtn" onClick={this.onHandleQueryAllClick.bind(this, this.state.map)}>查询下载状态</button>
+                <button className="queryBtn" onClick={this.onHandleQueryClick.bind(this, this.props.map)}>查询</button>
+                <button className="queryStatusBtn" onClick={this.onHandleQueryAllClick.bind(this, this.props.map)}>查询下载状态</button>
+                <button className="queryStatusBtn" onClick={this.onSelectBoundsClick.bind(this)}>通过拉框选择</button>
             </div>
         )
     }

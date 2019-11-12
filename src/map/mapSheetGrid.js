@@ -19,6 +19,7 @@ class MapSheetGrid {
      * @param {number} fillOpacity 透明度
      */
     setShapeStyle(fillColor, fillOpacity) {
+        fillColor = fillColor ? fillColor : "transparent";
         this.shape.setStyle({ fillColor: fillColor, fillOpacity: fillOpacity });
     }
 

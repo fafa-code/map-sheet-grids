@@ -18,7 +18,7 @@ class DrawMapGrids {
      * 绘制格网并返回网格组
      * @returns {Array<MapSheeetGrid>} 网格组
      */
-    drawGrids() {
+    drawGrids(fillcolor, fillOpacity) {
         // 获取分幅网格图幅编号数组
         let mapSheetA = new MapSheet(this.bounds, 1000000);
         let girdCodeList = mapSheetA.getGirdCodeList();
@@ -29,6 +29,7 @@ class DrawMapGrids {
         // 绘制格网
         for (let i = 0; i < girdCodeList.length; i++) {
             let mapSheetGrid = new MapSheeetGrid(girdCodeList[i]);
+            mapSheetGrid.setShapeStyle(fillcolor, fillOpacity);
             mapSheetGrid.addToLayer(gridLayers);
             mapSheetGrids[mapSheetGrid.mapCode] = mapSheetGrid;
         }
