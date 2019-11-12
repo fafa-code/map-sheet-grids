@@ -41,7 +41,7 @@ class MapQueryComponent extends React.Component {
     /**
      * 查询所有格网状态
      */
-    onHandleQueryAllClick(map) {
+    onHandleQueryAllClick() {
         let data = [
             { name: "H45", status: -1 },
             { name: "I47", status: 0 },
@@ -61,6 +61,7 @@ class MapQueryComponent extends React.Component {
             mapCodeArray.push(data[i].name);
         }
         let center = this.getBounds(mapSheetGrids, mapCodeArray).getCenter();
+        let map = this.props.map;
         map.setView(center, 5);
         // let url = "http://10.16.28.19:8080/gx-image-helper-app/landi/rest/tileserver/queryAll";
         // this.promiseRequest(url).then((result) => {
@@ -215,8 +216,8 @@ class MapQueryComponent extends React.Component {
         return (
             <div className="queryDiv">
                 <input className="qureyInput" type="text" name="mapCode" placeholder="请输入图幅编号" autoComplete="off" onChange={this.handleChange.bind(this)} />
-                <button className="queryBtn" onClick={this.onHandleQueryClick.bind(this, this.props.map)}>查询</button>
-                <button className="queryStatusBtn" onClick={this.onHandleQueryAllClick.bind(this, this.props.map)}>查询下载状态</button>
+                <button className="queryBtn" onClick={this.onHandleQueryClick.bind(this)}>查询</button>
+                <button className="queryStatusBtn" onClick={this.onHandleQueryAllClick.bind(this)}>查询下载状态</button>
                 <button className="queryStatusBtn" onClick={this.onSelectBoundsClick.bind(this)}>通过拉框选择</button>
             </div>
         )
