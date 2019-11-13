@@ -1,7 +1,7 @@
 import React from 'react';
 import L from 'leaflet';
 import '../index.css';
-import DrawMapGrids from '../map/drawSheetGrids';
+import RectSelectTool from '../map/rectSelectTool';
 
 class MapQueryComponent extends React.Component {
     constructor(props) {
@@ -77,86 +77,13 @@ class MapQueryComponent extends React.Component {
         // });
     }
 
+
     onSelectBoundsClick() {
 
         let map = this.props.map;
         map.dragging.disable();
 
-        // 定义拉框选择相关变量
-        let startLatLng = null;             // 拉框选择起点
-        let rectangle = null;               // 拉框矩形
-        let gridGroupOfSelected = null;     // 选中的格网图层组 
-        let gridOfSelected = [];            // 选中的单个格网对象数组
-        let textMarker = null;              // 提示信息注记
-
-        // 鼠标按下事件
-        const onMouseDown = (event) => {
-            startLatLng = event.latlng;
-            map.on("mousemove", onMouseMove);
-            map.off("mousedown", onMouseDown);
-        }
-
-        // 鼠标移动事件
-        const onMouseMove = (event) => {
-            if (rectangle) {
-                rectangle.remove();
-            }
-            let corner1 = startLatLng,
-                corner2 = event.latlng,
-                bounds = L.latLngBounds(corner1, corner2);
-            rectangle = L.rectangle(bounds, { color: "green", fillColor: 'green', weight: 1 }).addTo(map);
-        }
-
-        // 鼠标松开事件
-        const onMouseUp = () => {
-            map.off("mousemove", onMouseMove);
-            // 根据拉框范围绘制分幅格网
-            let drawSheetGrids = new DrawMapGrids(map, rectangle.getBounds());
-            // 获取选中的单个格网对象数组 
-            gridOfSelected = drawSheetGrids.drawGrids("blue", 0.5);
-            // 获取选中的格网图层组
-            gridGroupOfSelected = drawSheetGrids.getLayerGroup();
-            // 添加提示信息
-            addTextInfo();
-            // 地图拖动可用
-            map.dragging.enable();
-            // 移除绘制的拉框
-            rectangle.remove();
-            map.off("mouseup", onMouseUp);
-        }
-
-        // 鼠标右键事件
-        const onContextMenu = () => {
-            // 移除选中的格网图层组
-            gridGroupOfSelected.removeFrom(map);
-            // 移除提示信息文字注记
-            textMarker.remove();
-            map.off("contextmenu", onContextMenu);
-        }
-
-        // 添加提示信息
-        const addTextInfo = () => {
-            let mapCodeArray = [];
-            // 获取选中的所有格网图幅编码
-            for (let item in gridOfSelected) {
-                mapCodeArray.push(item);
-            }
-            let bounds = this.getBounds(gridOfSelected, mapCodeArray);
-            let textLatLng = L.latLng(bounds.getNorth(), bounds.getWest());
-            let textDiv = L.divIcon({
-                html: "双击下载，右键删除",
-                className: 'tipsInfo',
-                iconSize: [150, 32],
-                iconAnchor: [-6, 26],
-            });
-            textMarker = L.marker(textLatLng, { icon: textDiv });
-            textMarker.addTo(map);
-        }
-
-        // 设置地图事件监听
-        map.on("mousedown", onMouseDown);
-        map.on("mouseup", onMouseUp);
-        map.on("contextmenu", onContextMenu);
+        let rectSelectTool = new RectSelectTool(map);
     }
 
     /**
