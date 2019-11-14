@@ -5,18 +5,28 @@ import DrawMapGrids from './drawSheetGrids';
 class RectSelectTool extends MouseOperator {
     constructor(map) {
         super(map);
-        this.startLatLng = null;
-        this.endLatLng = null;
-        this.rectangle = null;
-        this.gridGroupOfSelected = null;
-        this.gridOfSelected = [];
-        this.textMarker = null;
+        this.startLatLng = null;    // 拉框起点
+        this.endLatLng = null;      // 拉框终点
+        this.rectangle = null;      // 拉框矩形
+        this.gridGroupOfSelected = null;    // 选中的分幅图层
+        this.gridOfSelected = [];           // 选中的网格
+        this.textMarker = null;             // 提示信息
     }
 
+    /**
+     * 鼠标按下
+     * @param {object} event 事件对象 
+     */
     onMouseDown(event) {
-        this.startLatLng = event.latlng;
+        if (!this.startLatLng && event.originalEvent.buttons === 1) {
+            this.startLatLng = event.latlng;
+        }
     }
 
+    /**
+     * 鼠标移动
+     * @param {object} event 事件对象 
+     */
     onMouseMove(event) {
         if (!this.startLatLng || this.gridGroupOfSelected) {
             return;
@@ -29,8 +39,11 @@ class RectSelectTool extends MouseOperator {
         this.rectangle = L.rectangle(bounds, { color: "green", fillColor: 'green', weight: 1 }).addTo(this.map);
     }
 
+    /**
+     * 鼠标抬起
+     */
     onMouseUp() {
-        if (this.gridGroupOfSelected) {
+        if (!this.startLatLng || this.gridGroupOfSelected) {
             return;
         }
         if (this.rectangle) {
@@ -49,16 +62,31 @@ class RectSelectTool extends MouseOperator {
         this.map.dragging.enable();
     }
 
+    /**
+     * 鼠标双击
+     */
     onDoubleClick() {
         console.log("添加表单");
     }
 
+    /**
+     * 鼠标右键
+     */
     onContextMenu() {
-        // 移除选中的格网图层组
-        this.gridGroupOfSelected.removeFrom(this.map);
-        this.textMarker.remove();
-        this.gridOfSelected = null;
-        this.unActive();
+        if (!this.startLatLng) {
+            // 地图拖动可用
+            this.map.dragging.enable();
+            this.unActive();
+        } else {
+            // 将属性置空
+            this.startLatLng = null;    
+            this.endLatLng = null;     
+            this.gridGroupOfSelected.removeFrom(this.map);
+            this.textMarker.remove();
+            this.gridOfSelected = null;
+            // 移除鼠标事件
+            this.unActive();
+        }
     }
 }
 
