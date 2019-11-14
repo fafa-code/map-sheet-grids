@@ -4,6 +4,7 @@ class MouseOperator {
         this.onMouseDown = this.onMouseDown.bind(this);
         this.onMouseMove = this.onMouseMove.bind(this);
         this.onMouseUp = this.onMouseUp.bind(this);
+        this.onClick = this.onClick.bind(this);
         this.onDoubleClick = this.onDoubleClick.bind(this);
         this.onContextMenu = this.onContextMenu.bind(this);
         this.active();
@@ -13,6 +14,7 @@ class MouseOperator {
         this.map.on("mousedown", this.onMouseDown);
         this.map.on("mousemove", this.onMouseMove);
         this.map.on("mouseup", this.onMouseUp);
+        this.map.on("click", this.onClick);
         this.map.on("dblclick", this.onDoubleClick);
         this.map.on("contextmenu", this.onContextMenu);
 
@@ -22,6 +24,7 @@ class MouseOperator {
         this.map.off("mousedown", this.onMouseDown);
         this.map.off("mousemove", this.onMouseMove);
         this.map.off("mouseup", this.onMouseUp);
+        this.map.off("click", this.onClick);
         this.map.off("dblclick", this.onDoubleClick);
         this.map.off("contextmenu", this.onContextMenu);
     }
@@ -35,6 +38,14 @@ class MouseOperator {
     }
 
     onMouseUp() {
+        throw new Error("未实现onMouseUp方法！！！");
+    }
+
+    onClick() {
+        throw new Error("未实现onMouseUp方法！！！");
+    }
+
+    onDoubleClick() {
         throw new Error("未实现onMouseUp方法！！！");
     }
 

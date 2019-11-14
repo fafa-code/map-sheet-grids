@@ -2,6 +2,7 @@ import React from 'react';
 import L from 'leaflet';
 import '../index.css';
 import RectSelectTool from '../map/rectSelectTool';
+import PolygonSelectTool from '../map/polygonSelectTool';
 
 class MapQueryComponent extends React.Component {
     constructor(props) {
@@ -86,6 +87,15 @@ class MapQueryComponent extends React.Component {
         let rectSelectTool = new RectSelectTool(map);
     }
 
+    onPolygonSelectClick() {
+        let map = this.props.map;
+        map.dragging.disable();
+
+        let rectSelectTool = new PolygonSelectTool(map);
+    }
+
+
+
     /**
      * 根据请求数据获取数据范围
      * @param {Array<MapSheetGrid>} mapSheetGrids 分幅格网
@@ -145,7 +155,8 @@ class MapQueryComponent extends React.Component {
                 <input className="qureyInput" type="text" name="mapCode" placeholder="请输入图幅编号" autoComplete="off" onChange={this.handleChange.bind(this)} />
                 <button className="queryBtn" onClick={this.onHandleQueryClick.bind(this)}>查询</button>
                 <button className="queryStatusBtn" onClick={this.onHandleQueryAllClick.bind(this)}>查询下载状态</button>
-                <button className="queryStatusBtn" onClick={this.onSelectBoundsClick.bind(this)}>通过拉框选择</button>
+                <button className="queryStatusBtn" onClick={this.onSelectBoundsClick.bind(this)}>拉框选择</button>
+                <button className="queryStatusBtn" onClick={this.onPolygonSelectClick.bind(this)}>多边形选择</button>
             </div>
         )
     }
