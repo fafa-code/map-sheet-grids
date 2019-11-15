@@ -1,5 +1,6 @@
 import React from 'react';
 import L from 'leaflet';
+import { Input, Menu, Dropdown, Icon } from 'antd';
 import '../index.css';
 import RectSelectTool from '../map/rectSelectTool';
 import PolygonSelectTool from '../map/polygonSelectTool';
@@ -8,34 +9,35 @@ class MapQueryComponent extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            mapCodeInput: "",
+            querySheetStatus: [],
+            selectResult: null
         }
-    }
-
-    /**
-     * 处理表单内容改变事件
-     * @param {Object} event 事件对象
-     */
-    handleChange(event) {
-        // 更新状态
-        this.setState({
-            mapCodeInput: event.target.value,
-        });
     }
 
     /**
      * 处理查询按钮点击事件
      */
-    onHandleQueryClick() {
-        let mapCode = this.state.mapCodeInput;
+    onHandleQueryClick(mapCode) {
+        this.resetQueryResult();
+        if (!mapCode) {
+            return;
+        }
         let mapSheetGrids = this.props.mapSheetGrids;
-        let map = this.props.map;
-        let url = "http://10.16.28.19:8080/gx-image-helper-app/landi/rest/tileserver/query?mapCode=" + mapCode;
+        let querySheetStatus = this.state.querySheetStatus.slice();
+
+        let url = "http://10.16.28.240:8069/gx-image-helper-app/landi/rest/tileserver/query?mapCode=" + mapCode;
         this.promiseRequest(url).then((result) => {
-            if (result) {
-                mapSheetGrids[mapCode].setShapeStyle('blue');
-                map.setView(mapSheetGrids[mapCode].center, 6);
+            if (result.status === -1) {
+                mapSheetGrids[mapCode].setShapeStyle('red', 0.5);
+            } else if (result.status === 0) {
+                mapSheetGrids[mapCode].setShapeStyle('#49ef04', 0.5);
+            } else {
+                mapSheetGrids[mapCode].setShapeStyle('blue', 0.5);
             }
+            querySheetStatus.push(mapSheetGrids[mapCode]);
+            this.setState({ querySheetStatus: querySheetStatus });
+            let map = this.props.map;
+            map.setView(mapSheetGrids[mapCode].center, 6);
         });
     }
 
@@ -43,58 +45,57 @@ class MapQueryComponent extends React.Component {
      * 查询所有格网状态
      */
     onHandleQueryAllClick() {
-        let data = [
-            { name: "H45", status: -1 },
-            { name: "I47", status: 0 },
-            { name: "K51", status: 1 },
-            { name: "J44", status: 1 }
-        ];
+        this.resetQueryResult();
+        let url = "http://10.16.28.240:8069/gx-image-helper-app/landi/rest/tileserver/queryAll";
         let mapSheetGrids = this.props.mapSheetGrids;
+        let querySheetStatus = this.state.querySheetStatus.slice();
         let mapCodeArray = [];
-        for (let i = 0; i < data.length; i++) {
-            if (data[i].status === -1) {
-                mapSheetGrids[data[i].name].setShapeStyle('red', 0.5);
-            } else if (data[i].status === 0) {
-                mapSheetGrids[data[i].name].setShapeStyle('#49ef04', 0.5);
-            } else {
-                mapSheetGrids[data[i].name].setShapeStyle('blue', 0.5);
+        this.promiseRequest(url).then((result) => {
+            for (let i = 0; i < result.length; i++) {
+                if (result[i].status === -1) {
+                    mapSheetGrids[result[i].name].setShapeStyle('red', 0.5);
+                } else if (result[i].status === 0) {
+                    mapSheetGrids[result[i].name].setShapeStyle('#49ef04', 0.5);
+                } else {
+                    mapSheetGrids[result[i].name].setShapeStyle('blue', 0.5);
+                }
+                mapCodeArray.push(result[i].name);
+                querySheetStatus.push(mapSheetGrids[result[i].name]);
             }
-            mapCodeArray.push(data[i].name);
+            this.setState({ querySheetStatus: querySheetStatus });
+            let center = this.getBounds(mapSheetGrids, mapCodeArray).getCenter();
+            let map = this.props.map;
+            map.setView(center, 5);
+        });
+    }
+
+    resetSelectResult() {
+        let selectResult = this.state.selectResult;
+        if (selectResult) {
+            selectResult.reset();
         }
-        let center = this.getBounds(mapSheetGrids, mapCodeArray).getCenter();
-        let map = this.props.map;
-        map.setView(center, 5);
-        // let url = "http://10.16.28.19:8080/gx-image-helper-app/landi/rest/tileserver/queryAll";
-        // this.promiseRequest(url).then((result) => {
-        //     for (let i = 0; i < result.length; i++) {
-        //         if (result[i].status === -1) {
-        //             mapSheetGrids[result[i].name].setShapeStyle('red', 0.5);
-        //         } else if (result[i].status === 0) {
-        //             mapSheetGrids[result[i].name].setShapeStyle('#49ef04', 0.5);
-        //         } else {
-        //             mapSheetGrids[result[i].name].setShapeStyle('blue', 0.5);
-        //         }
-        //     }
-        // });
     }
 
 
     onSelectBoundsClick() {
-
+        this.resetSelectResult();
         let map = this.props.map;
         map.dragging.disable();
-
-        let rectSelectTool = new RectSelectTool(map);
+        let recSelect = new RectSelectTool(map);
+        this.setState({
+            selectResult: recSelect,
+        });
     }
 
     onPolygonSelectClick() {
+        this.resetSelectResult();
         let map = this.props.map;
         map.dragging.disable();
-
-        let rectSelectTool = new PolygonSelectTool(map);
+        let polySelect = new PolygonSelectTool(map);
+        this.setState({
+            selectResult: polySelect,
+        });
     }
-
-
 
     /**
      * 根据请求数据获取数据范围
@@ -126,6 +127,14 @@ class MapQueryComponent extends React.Component {
         return bounds;
     }
 
+    resetQueryResult() {
+        let querySheetStatus = this.state.querySheetStatus.slice();
+        querySheetStatus.forEach((item) => {
+            item.setShapeStyle('transparent');
+        });
+        this.setState({ querySheetStatus: querySheetStatus });
+    }
+
     /**
     * Promise请求
     * @param {string} url 请求url
@@ -141,7 +150,6 @@ class MapQueryComponent extends React.Component {
                     let result = JSON.parse(xhr.responseText)
                     resolve(result)
                 } else {
-                    console.log("请求失败！");
                     reject("请求失败！");
                 }
             }
@@ -150,13 +158,26 @@ class MapQueryComponent extends React.Component {
     }
 
     render() {
+        const { Search } = Input;
+
+        const menu = (
+            < Menu >
+                <Menu.Item key="1" onClick={this.onSelectBoundsClick.bind(this)}>通过拉框选择</Menu.Item>
+                <Menu.Item key="2" onClick={this.onPolygonSelectClick.bind(this)}>通过多边形选择</Menu.Item>
+            </Menu>
+        )
+
         return (
-            <div className="queryDiv">
-                <input className="qureyInput" type="text" name="mapCode" placeholder="请输入图幅编号" autoComplete="off" onChange={this.handleChange.bind(this)} />
-                <button className="queryBtn" onClick={this.onHandleQueryClick.bind(this)}>查询</button>
-                <button className="queryStatusBtn" onClick={this.onHandleQueryAllClick.bind(this)}>查询下载状态</button>
-                <button className="queryStatusBtn" onClick={this.onSelectBoundsClick.bind(this)}>拉框选择</button>
-                <button className="queryStatusBtn" onClick={this.onPolygonSelectClick.bind(this)}>多边形选择</button>
+            <div className="operateDiv" >
+                <div>
+                    <Search style={{ width: 180 }} placeholder="请输入图幅编号" onSearch={this.onHandleQueryClick.bind(this)} />
+                    <button className="queryAll" onClick={this.onHandleQueryAllClick.bind(this)}>查询所有格网</button>
+                </div>
+                <div>
+                    <Dropdown overlay={menu}>
+                        <button className="selectBtn">选择图幅 <Icon type="down" /></button>
+                    </Dropdown>
+                </div>
             </div>
         )
     }

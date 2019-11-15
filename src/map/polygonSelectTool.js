@@ -78,6 +78,10 @@ class PolygonSelectTool extends MouseOperator {
     }
 
     onContextMenu() {
+        this.reset();
+    }
+
+    reset() {
         this.map.dragging.enable();
         this.paths = null;
         if (this.polygon) {

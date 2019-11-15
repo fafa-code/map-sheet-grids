@@ -73,20 +73,30 @@ class RectSelectTool extends MouseOperator {
      * 鼠标右键
      */
     onContextMenu() {
-        if (!this.startLatLng) {
-            // 地图拖动可用
-            this.map.dragging.enable();
-            this.unActive();
-        } else {
-            // 将属性置空
-            this.startLatLng = null;    
-            this.endLatLng = null;     
-            this.gridGroupOfSelected.removeFrom(this.map);
-            this.textMarker.remove();
-            this.gridOfSelected = null;
-            // 移除鼠标事件
-            this.unActive();
+        this.reset();
+    }
+
+    reset() {
+        this.map.dragging.enable();
+        this.startLatLng = null;
+        if (this.rectangle) {
+            this.rectangle.remove();
+            this.rectangle = null;
         }
+        if (this.textMarker) {
+            this.textMarker.remove();
+            this.textMarker = null;
+        }
+        if (this.gridGroupOfSelected) {
+            this.gridGroupOfSelected.remove();
+            this.gridGroupOfSelected = null;
+        }
+        this.gridOfSelected = null;
+        this.unActive();
+    }
+
+    onClick() {
+
     }
 }
 

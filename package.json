@@ -5,6 +5,7 @@
   "dependencies": {
     "@turf/boolean-crosses": "^6.0.1",
     "@turf/intersect": "^6.1.3",
+    "antd": "^3.25.1",
     "leaflet": "^1.5.1",
     "react": "^16.11.0",
     "react-dom": "^16.11.0",

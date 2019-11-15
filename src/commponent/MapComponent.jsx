@@ -30,13 +30,14 @@ class MapComponent extends React.Component {
             zoom: 11,
             attributionControl: false,
             doubleClickZoom: false,
-            maxBounds: bounds,
+            //maxBounds: bounds,
         });
 
         // 将切片添加至地图
         L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
             minZoom: 4,
             maxZoom: 18,
+            noWrap: true,
             id: 'mapbox.streets'
         }).addTo(map);
         this.props.setData({ map: map });
